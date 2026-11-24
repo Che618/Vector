@@ -3,7 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#123768"><title>科学数据张量底座与Token化价值运营平台</title>
 <link rel="icon" href="assets/mark.svg"><link rel="stylesheet" href="portal/portal.css"><link rel="stylesheet" href="portal/value.css">
-</head><body><div id="portal" v-cloak><div :class="{'value-theme':group==='value'}">
+</head><body><div id="portal" v-cloak><div :class="{'value-theme':group==='value'||group==='tools'}">
 <header class="global">
   <a href="#/platform" class="brand"><img src="assets/mark.svg" alt=""><span>北交大<span class="brand-sep">/</span>科学数据平台</span></a>
   <nav class="global-nav" aria-label="平台导航"><a href="#/platform" :class="{on:group==='platform'}">平台首页</a><a v-for="m in modules" :href="m.link" :class="{on:group===m.key}">{{m.short}}</a></nav>

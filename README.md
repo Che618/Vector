@@ -4,8 +4,7 @@
 
 ## 发布到 GitHub Pages
 
-仓库包含 GitHub Actions 部署工作流。将 `main` 分支推送到 GitHub 后，在仓库 **Settings → Pages → Build and deployment → Source** 中选择 **GitHub Actions**。工作流完成后，网站地址为 <https://che618.github.io/Vector/>；后续推送到 `main` 会自动更新网站。也可在仓库 **Actions** 页面手动运行 “Deploy static site to GitHub Pages”。
-
+网站地址为 <https://che618.github.io/Vector/>；
 ## 汇报演示（约五分钟）
 
 1. **为什么需要质检。** 首页点击「分片质检案例」。案例含 6 条浮标记录，默认规则排除 1 条重复、1 条过短及 1 条无效记录。3 条有效记录经分片得到 4 个片段。调大或调小片长，再点「预览质检结果」，比较片段数量。回到默认规则（最短 6 字、片长 42 字、重叠 8 字）后点击「采用方案并去编码」。

@@ -21,7 +21,7 @@
   const Mixbar = {props:['p'],template:'<div class="mixbar" role="img" :aria-label="\'主体分配 \'+p.net+\'，运营成本 \'+p.cost+\'，供给留存 \'+p.reserve"><i v-for="(v,i) in [p.net,p.cost,p.reserve]" :class="\'s\'+i" :style="{width:(p.gross?v/p.gross*100:0)+\'%\'}"></i></div>'};
   const LogTable = {props:['rows'],emits:['show'],methods:{stamp},template:'<div class="tablewrap"><table><thead><tr><th>操作</th><th>关联编号</th><th>业务说明</th><th>时间（北京时间）</th></tr></thead><tbody><tr v-for="l in rows"><td>{{l.action}}</td><td><button class="text-link mono" @click="$emit(\'show\',l)">{{l.ref}}</button></td><td>{{l.detail}}</td><td class="muted">{{stamp(l.time)}}</td></tr></tbody></table></div>'};
   const app=createApp({setup(){
-    const route=ref(parse()),group=computed(()=>route.value.g),page=computed(()=>route.value.p);
+    const route=ref(parse()),group=computed(()=>route.value.g),page=computed(()=>route.value.p),vectorFrame=ref(null);
     const navigation=computed(()=>N[group.value]||[]),navGroups=computed(()=>[...new Set(navigation.value.map(n=>n.section))]);
     const info=computed(()=>navigation.value.find(n=>n.id===page.value)||{});
     const vectorSource=computed(()=>'./vector.html#/'+page.value);
@@ -86,6 +86,7 @@
       {route:'ledger',title:'确认入账',icon:'book',detail:'固化规则与分配明细',measure:state.value.batches.length+' 个已结批次'}
     ]);
     const meterRevenue=computed(()=>state.value.resources.map((_,i)=>O.total(preview.value.usages.filter(u=>u.r===i).map(u=>u.amount))));
+    const integrationCount=computed(()=>state.value.bridgeReceipts?.length||0);
     const dialog=ref(null),dialogKind=ref(''),form=ref({}),picked=ref(null),objectId=ref(''),settleDraft=ref(null),scoreRule=ref(applied.value);
     const kinds={uses:'使用流水明细',declare:'申报基础贡献',reset:'恢复收益分配与供给演示起点',guide:'演示指引',evidence:'贡献凭据',use:'登记有效使用',score:'综合贡献计算依据',settle:'确认本期结算',batch:'结算快照',issue:'兑换服务权益',redeem:'登记服务核销',plan:'新建供给任务',task:'供给交付与验收',log:'业务记录详情'};
     const dialogTitle=computed(()=>kinds[dialogKind.value]);
@@ -100,9 +101,10 @@
     function close(){dialog.value?.close();dialogKind.value='';err.value='';}
     function backdrop(e){if(e.target!==dialog.value)return;const b=e.target.getBoundingClientRect();if(e.clientX<b.left||e.clientX>b.right||e.clientY<b.top||e.clientY>b.bottom)close();}
     function onRoute(){close();route.value=parse();document.title=(info.value.title|| (group.value==='vector'?'张量向量库':'平台首页'))+' · '+title;window.scrollTo(0,0);}
-    function onStore(e){if(e.key===key && e.newValue)try{state.value=JSON.parse(e.newValue);}catch{}}
-    onMounted(()=>{onRoute();window.addEventListener('hashchange',onRoute);window.addEventListener('storage',onStore);});
-    onBeforeUnmount(()=>{window.removeEventListener('hashchange',onRoute);window.removeEventListener('storage',onStore);});
+    function onStore(e){if(e.key===key && e.newValue)try{state.value=JSON.parse(e.newValue);}catch{}if(e.key===window.ScienceBridge?.key)syncUsage();}
+    function onIntegrationMessage(e){if(e.origin===location.origin&&e.source===vectorFrame.value?.contentWindow&&e.data?.channel==='bjtu-science-bridge')captureUsage(e.data.event);}
+    onMounted(()=>{onRoute();syncUsage();window.addEventListener('hashchange',onRoute);window.addEventListener('storage',onStore);window.addEventListener('message',onIntegrationMessage);});
+    onBeforeUnmount(()=>{window.removeEventListener('hashchange',onRoute);window.removeEventListener('storage',onStore);window.removeEventListener('message',onIntegrationMessage);});
     const busy=ref(false);
     async function mutate(fn,done){
       if(busy.value)return;busy.value=true;err.value='';
@@ -115,11 +117,28 @@
           state.value=candidate; done?.(result);
         };
         if(navigator.locks?.request)await navigator.locks.request(key,work);else work();
-      }catch(e){err.value=e.name==='QuotaExceededError'?'浏览器存储已满，本次修改未保存。':e.message;}finally{busy.value=false;}
+      }catch(e){err.value=e.name==='QuotaExceededError'?'浏览器存储已满，本次修改未保存。':e.message;}finally{busy.value=false;if(syncAgain&&!syncing)syncUsage();}
+    }
+    function captureUsage(event){if(event?.type==='usage.succeeded')syncUsage();}
+    let syncing=false,syncAgain=false;
+    async function syncUsage(){
+      if(syncing){syncAgain=true;return;}
+      if(busy.value){syncAgain=true;return;}
+      syncing=true;
+      try{
+        do{
+          syncAgain=false;
+          const events=(window.ScienceBridge?.list('usage.succeeded')||[]).filter(e=>!state.value.bridgeIgnored?.includes(e.eventId)&&!state.value.bridgeReceipts?.some(x=>x.eventId===e.eventId));
+          if(events.length)await mutate(s=>events.map(e=>O.importUsage(s,e)),usages=>{
+            usages.forEach((u,i)=>window.ScienceBridge?.update(events[i].eventId,'已计量待核验',{useId:u.id}));
+            say('已关联 '+usages.length+' 条跨模块使用，新增贡献凭据待核验。');
+          });
+        }while(syncAgain);
+      }finally{syncing=false;}
     }
     function showEvidence(e){if(e)open('evidence',e.id,{note:e.ref==='JOB-11-1'&&e.state==='待核验'?'重复使用相同业务凭据。':'已核对主体、版本与有效用量。'});}
     function review(pass){const id=objectId.value,memo=form.value.note;mutate(s=>O.review(s,id,pass,memo),()=>{close();say(pass?'已确认，可参与本期分配。':'已保存排除理由。');});}
-    function resetDemo(){mutate(s=>Object.assign(s,O.seed()),()=>{period.value='';priorRule.value=O.clone(O.defaultRule);applied.value=O.clone(O.defaultRule);draftRule.value=O.clone(applied.value);close();say('收益分配与供给演示已恢复起点。');});}
+    function resetDemo(){mutate(s=>{Object.assign(s,O.seed());s.bridgeReceipts=[];s.bridgeIgnored=(window.ScienceBridge?.list('usage.succeeded')||[]).map(e=>e.eventId);},()=>{period.value='';priorRule.value=O.clone(O.defaultRule);applied.value=O.clone(O.defaultRule);draftRule.value=O.clone(applied.value);close();say('收益分配与供给演示已恢复起点；旧联动事件不重复导入。');});}
     function startDeclare(){open('declare','',{actor:0,r:0,qty:100,grade:'A',ref:'DEL-'+(state.value.serial+1),proof:''});}
     function declareEvent(){const f=O.clone(form.value);mutate(s=>O.declare(s,f),e=>{close();eventFilter.value='待核验';query.value='';say('已创建待核验贡献 '+e.id);});}
     function startUse(){open('use','',{r:0,qty:100,reference:'JOB-DEMO-'+(state.value.serial+1)});}
@@ -155,7 +174,7 @@
     function openTarget(){const {kind,x}=logTarget.value;
       if(kind==='use')showEvidence(state.value.events.find(e=>e.id===x.event));else if(kind==='task')showTask(x);
       else if(kind==='evidence')showEvidence(x);else if(kind==='batch')showBatch(x);else{close();account.value=x.actor;location.hash='/value/rights';}}
-    return {O,period,historical,incomeSides,priorRule,prior,drill,showUses,versionUses,overviewAction,overviewLabel,duplicateRecord,scoreTotal,scoreNet,handoff,overviewPool,pathway,meterRevenue,modules:N.modules,group,page,info,navigation,navGroups,vectorSource,offline,state,storageWarning,toast,err,fmt,dec,pct,stamp,preview,applied,draftRule,dirty,pending,openTasks,blockingUses,poolParts,chart,maxGross,todo,query,eventFilter,eventList,evidenceStats,meterFilter,meterList,meterStats,batchStats,supplyStats,account,myVouchers,taskFilter,taskList,traceQuery,traceKind,traceList,logKinds,guide,dialog,dialogKind,dialogTitle,form,picked,scoreRule,obj,settleDraft,logTarget,openTarget,resetDemo,startDeclare,declareEvent,open,close,backdrop,showEvidence,review,startUse,addUse,applyRule,resetRule,showScore,openSettle,goReview,confirmSettle,showAccount,showBatch,exportFile,voucherStatus,startIssue,issue,startRedeem,redeem,startPlan,createPlan,showTask,deliver,accept,showLog};
+    return {O,period,historical,incomeSides,priorRule,prior,drill,showUses,versionUses,overviewAction,overviewLabel,duplicateRecord,scoreTotal,scoreNet,handoff,overviewPool,pathway,meterRevenue,integrationCount,captureUsage,vectorFrame,modules:N.modules,group,page,info,navigation,navGroups,vectorSource,offline,state,storageWarning,toast,err,fmt,dec,pct,stamp,preview,applied,draftRule,dirty,pending,openTasks,blockingUses,poolParts,chart,maxGross,todo,query,eventFilter,eventList,evidenceStats,meterFilter,meterList,meterStats,batchStats,supplyStats,account,myVouchers,taskFilter,taskList,traceQuery,traceKind,traceList,logKinds,guide,dialog,dialogKind,dialogTitle,form,picked,scoreRule,obj,settleDraft,logTarget,openTarget,resetDemo,startDeclare,declareEvent,open,close,backdrop,showEvidence,review,startUse,addUse,applyRule,resetRule,showScore,openSettle,goReview,confirmSettle,showAccount,showBatch,exportFile,voucherStatus,startIssue,issue,startRedeem,redeem,startPlan,createPlan,showTask,deliver,accept,showLog};
   }});
   app.component('ico',Icon).component('pill',Pill).component('empty',Empty).component('metric',Metric).component('mixbar',Mixbar).component('logtable',LogTable).component('tool-workspace',window.ToolWorkspace).mount('#portal');
 })();

@@ -9,7 +9,7 @@ const app=createApp({setup(){
  Engineering.init(s);
  const guides=[...Model.guides,...Engineering.guidePages].sort((a,b)=>Engineering.guideOrder.indexOf(a[0])-Engineering.guideOrder.indexOf(b[0])),domains=Model.domains;
  const groups=[...new Set(guides.map(g=>g[3]))], desc={prepare:'比较分片策略和质量规则，核对每条记录的处理原因。',versions:'预检增量、发布索引版本，并复现不同版本下的检索范围。',evaluate:'用有相关性标注的科学查询，复核检索命中和排序效果。',activity:'按时间追踪当前浏览器发生的数据处理、索引维护和检索实验。',intake:'将文本、结构化记录或数值张量解析为带来源位置的片段。',encode:'对已登记片段执行本地编码，核对向量输出后写入索引。',indexes:'浏览已就绪的向量索引、原始片段和编码信息。',search:'在相同编码空间中检索相似向量，回溯每条结果的原始数据。'};
- const page=ref('home'),mobile=ref(false),modal=ref(''),dialogEl=ref(null),fileEl=ref(null),theme=ref('classic'),toast=ref(''),err=ref(''),quick=ref(''),q=ref(''),domain=ref(''),kind=ref(''),selected=ref(s.sources[0].id),subject=ref(null),recIndex=ref(0),recSource=ref(null),backToCollection=ref(false);
+ const page=ref('home'),mobile=ref(false),modal=ref(''),dialogEl=ref(null),fileEl=ref(null),theme=ref('classic'),toast=ref(''),err=ref(''),quick=ref(''),q=ref(''),domain=ref(''),kind=ref(''),selected=ref(s.sources[0].id),subject=ref(null),recIndex=ref(0),recSource=ref(null),backToCollection=ref(false),bridgeAssets=ref([]);
  const recordPage=ref(1),browsePage=ref(1),searchMode=ref('text'),scope=ref(''),query=ref(''),topK=ref(5),hits=ref([]),meta=ref('');let timer;
  const draft=reactive({name:'',domain:'海洋科学',mode:'text',format:'txt',input:'',file:''});
  const ds=id=>s.sources.find(d=>d.id===id);
@@ -30,6 +30,17 @@ const app=createApp({setup(){
  const encoderName=d=>d.mode==='text'?'本地文本特征编码器 v1.0':'张量展平与 L2 归一化 v1.0';
  function say(t){toast.value=t;clearTimeout(timer);timer=setTimeout(()=>toast.value='',3200)}
  function persist(){try{localStorage.setItem(key,JSON.stringify(s));return true}catch{say('浏览器存储空间不足，当前操作仅在本次会话有效。');return false}}
+ function refreshBridgeAssets(){bridgeAssets.value=(window.ScienceBridge?.list('tool.output.available')||[]).filter(e=>e.status==='待导入')}
+ function importToolOutput(event){try{
+   if(!event||event.status!=='待导入')return;
+   const p=event.payload||{};if(s.sources.some(d=>d.toolRun===p.runId)){window.ScienceBridge?.update(event.eventId,'已导入',{datasetId:s.sources.find(d=>d.toolRun===p.runId).id});refreshBridgeAssets();return}
+   if(s.sources.length>=80)throw Error('本地演示最多登记 80 个数据源。');
+   const records=Model.parse(String(p.content||''),'txt','text'),domain=Model.domains[p.domain]?p.domain:'其他领域';
+   const d={id:'DS-'+(++s.serial),name:'工具演示产物 '+p.runId,domain,mode:'text',format:'TXT',origin:'工具运行演示报告 · '+p.runId,created:Date.now(),state:'待编码',records,toolRun:p.runId,outputRef:p.assetId,parent:{id:p.inputRef||p.runId,version:p.toolVersion||''}};
+   s.sources.unshift(d);selected.value=d.id;recordPage.value=1;ext.record('接收工具产物',d,'工具 '+p.toolId+' · 输出 '+p.assetId,records.length);
+   if(!persist())throw Error('数据源已在当前会话登记，但浏览器存储失败；请先导出或释放存储空间。');
+   window.ScienceBridge?.update(event.eventId,'已导入',{datasetId:d.id});refreshBridgeAssets();go('prepare');say('演示产物已登记为 '+d.id+'，可继续质检、编码和建索引。');
+  }catch(ex){err.value=ex.message}}
  function open(name){modal.value=name;nextTick(()=>{if(dialogEl.value&&!dialogEl.value.open)dialogEl.value.showModal();const body=dialogEl.value?.querySelector('.dlg-body');if(body)body.scrollTop=0})}
  function closeDialog(){if(dialogEl.value?.open)dialogEl.value.close();modal.value=''}
  function go(p){if(page.value!==p){location.hash='/'+p;applyRoute()}else{closeDialog();mobile.value=false}}
@@ -43,7 +54,7 @@ const app=createApp({setup(){
  function toEncode(d){selected.value=d.id;resetPreview();go('encode')}
  function resetPreview(){recordPage.value=1;err.value=''}
  function generate(){try{const d=current.value;const vectors=d.records.map((r,i)=>{try{const v=Model.encode(r,d.mode);if(v.length!==dim(d)||!v.every(Number.isFinite)||Math.abs(Math.hypot(...v)-1)>.00001)throw Error('向量校验失败');return v}catch(ex){throw Error('片段 '+(i+1)+'：'+ex.message)}});vectors.forEach((v,i)=>d.records[i].vec=v);if(d.state!=='已索引')d.state='已生成';ext.record('向量编码',d,encoderName(d)+' · '+dim(d)+' 维 · 单位范数校验通过。',vectors.length);err.value='';if(persist())say('已生成 '+vectors.length+' 条 '+dim(d)+' 维向量。')}catch(ex){err.value=ex.message}}
- function writeIndex(){const d=current.value;if(d.state!=='已生成')return;d.state='已索引';d.indexedAt=Date.now();Engineering.ensureRelease(d);ext.record('发布索引版本',d,'首次写入，索引可用于检索。',d.records.length);if(persist())say('索引已就绪，可点击“检索此索引”。')}
+ function writeIndex(){const d=current.value;if(d.state!=='已生成')return;d.state='已索引';d.indexedAt=Date.now();Engineering.ensureRelease(d);ext.record('发布索引版本',d,'首次写入，索引可用于检索。',d.records.length);if(persist()){window.ScienceBridge?.publish({eventId:'VECTOR-INDEX-'+d.id+'-V'+d.active,type:'vector.asset.indexed',status:'已入库',payload:{resourceId:d.id,resourceName:d.name,domain:d.domain,version:'v'+d.active,records:d.records.length,origin:d.origin,toolRun:d.toolRun||''}});say('索引已就绪，可点击“检索此索引”。')}}
  const preview=v=>'['+v.slice(0,8).map(n=>n.toFixed(2)).join(', ')+ (v.length>8?', …]':']');
  function exportVectors(d){const out={dataset_id:d.id,name:d.name,encoder:encoderName(d),dimension:dim(d),metric:'cosine',vectors:d.records.map((r,i)=>({vector_id:Model.vectorId(d,i),position:r.loc,source:r.original||r.text,shape:r.shape,values:r.vec}))};const url=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=d.id+'-vectors.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);say('向量 JSON 已生成')}
  function browse(d){subject.value=d;browsePage.value=1;open('collection')}
@@ -68,9 +79,11 @@ const app=createApp({setup(){
  }
  hits.value=list.slice(0,topK.value);
  meta.value=Engineering.strategyNames[method]+' · 已比较 '+count+' 条向量，返回 '+hits.value.length+' 条片段 · '+v.length+' 维';
- s.searches++;ext.record('查询检索',scope.value?ds(scope.value):null,Engineering.strategyNames[method]+' · '+text.slice(0,90)+' · Top '+topK.value+' · 候选 '+count+' 条。',hits.value.length);persist()}catch(ex){err.value=ex.message}}
+ s.searches++;ext.record('查询检索',scope.value?ds(scope.value):null,Engineering.strategyNames[method]+' · '+text.slice(0,90)+' · Top '+topK.value+' · 候选 '+count+' 条。',hits.value.length);if(persist()&&hits.value.length&&window.ScienceBridge){const queryId='VQ-'+Date.now()+'-'+s.searches,grouped=new Map();hits.value.forEach(h=>{const rows=grouped.get(h.ds)||[];rows.push(h);grouped.set(h.ds,rows)});grouped.forEach((rows,id)=>{const d=ds(id);window.ScienceBridge.publish({eventId:'VECTOR-USAGE-'+queryId+'-'+id,type:'usage.succeeded',status:'待计量',payload:{source:'vector',domain:d.domain,resourceId:d.id,resourceName:d.name,version:'v'+(rows[0].version||d.active),quantity:rows.length,unit:'条',reference:queryId,query:text.slice(0,120)}})})}}catch(ex){err.value=ex.message}}
  const statusClass=d=>d.state==='已索引'?'ok':d.state==='已生成'?'pending':'warn';
- onMounted(()=>{try{theme.value=WorkspaceTheme.applyTheme(localStorage.getItem('ui-theme')||'classic')}catch{}applyRoute();window.addEventListener('hashchange',applyRoute)});onUnmounted(()=>window.removeEventListener('hashchange',applyRoute));
- return {...ext,referenceBenchmark,s,domains,guides,groups,desc,page,info,mobile,modal,dialogEl,fileEl,theme,toast,err,quick,q,domain,kind,selected,subject,recIndex,recSource,rec,backToCollection,recordPage,browsePage,searchMode,scope,query,topK,hits,meta,draft,ds,current,pagedRecords,indexed,filtered,steps,points,plotDomains,examples,dim,encoderName,open,closeDialog,go,themeSwitch,changeMode,loadExample,loadFile,register,toEncode,resetPreview,generate,writeIndex,preview,exportVectors,browse,showRec,returnCollection,clearHits,resetSearchMode,searchSource,searchWithRecord,quickSearch,runSearch,statusClass,vectorId:Model.vectorId};
+ function onBridgeStorage(e){if(e.key===window.ScienceBridge?.key)refreshBridgeAssets()}
+ function onBridgeEvent(){refreshBridgeAssets()}
+ onMounted(()=>{try{theme.value=WorkspaceTheme.applyTheme(localStorage.getItem('ui-theme')||'classic')}catch{}refreshBridgeAssets();applyRoute();window.addEventListener('hashchange',applyRoute);window.addEventListener('storage',onBridgeStorage);window.addEventListener('science-bridge-event',onBridgeEvent)});onUnmounted(()=>{window.removeEventListener('hashchange',applyRoute);window.removeEventListener('storage',onBridgeStorage);window.removeEventListener('science-bridge-event',onBridgeEvent)});
+ return {...ext,referenceBenchmark,s,domains,guides,groups,desc,page,info,mobile,modal,dialogEl,fileEl,theme,toast,err,quick,q,domain,kind,selected,subject,recIndex,recSource,rec,backToCollection,bridgeAssets,recordPage,browsePage,searchMode,scope,query,topK,hits,meta,draft,ds,current,pagedRecords,indexed,filtered,steps,points,plotDomains,examples,dim,encoderName,open,closeDialog,go,themeSwitch,changeMode,loadExample,loadFile,register,importToolOutput,toEncode,resetPreview,generate,writeIndex,preview,exportVectors,browse,showRec,returnCollection,clearHits,resetSearchMode,searchSource,searchWithRecord,quickSearch,runSearch,statusClass,vectorId:Model.vectorId};
 }});
 app.component('i-c',Icon);app.component('ds-name',DsName);app.component('empty-v',EmptyV);app.component('pager',Pager);app.component('space-plot',SpacePlot);app.mount('#app');

@@ -1,0 +1,6 @@
+.bridge-inbox .card-title{gap:14px;align-items:flex-start}
+.bridge-inbox .card-title p{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.5}
+.bridge-asset{display:flex;align-items:center;gap:16px;padding:12px 0;border-top:1px solid var(--border)}
+.bridge-asset .grow{display:grid;gap:4px;min-width:0}
+.bridge-asset small{color:var(--muted);overflow-wrap:anywhere}
+@media(max-width:620px){.bridge-asset{align-items:flex-start;flex-direction:column}.bridge-asset .btn{width:100%}}

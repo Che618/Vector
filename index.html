@@ -33,7 +33,7 @@
   </div>
 </main>
 
-<div v-else-if="group==='vector'" class="vector-host"><div v-if="offline" class="local-vector"><a href="vector.html" target="_blank">独立打开向量库</a></div><iframe title="张量向量库九页工作台" :src="vectorSource"></iframe></div>
+<div v-else-if="group==='vector'" class="vector-host"><div v-if="offline" class="local-vector"><a href="vector.html" target="_blank">独立打开向量库</a></div><iframe ref="vectorFrame" title="张量向量库九页工作台" :src="vectorSource"></iframe></div>
 
 <div v-else class="shell">
   <aside class="sidebar"><div class="side-brand"><span class="side-icon"><ico :name="group==='value'?'income':'tool'" :size="23"></ico></span><div><b>{{group==='value'?'Token收益分配与供给':'工具管理工作台'}}</b><small>{{group==='value'?'TOKEN DISTRIBUTION':'TOOL REGISTRY'}}</small></div></div>
@@ -53,7 +53,7 @@
       <div><small>依据</small><b>{{handoff[0]}}</b></div><div><small>产出</small><b>{{handoff[1]}}</b></div>
       <div class="handoff-links"><a v-for="[dest,label] in handoff[2]" :href="'#/value/'+dest">{{label}}</a></div>
     </section>
-    <tool-workspace v-if="group==='tools'" :page="page"></tool-workspace>
+    <tool-workspace v-if="group==='tools'" :page="page" @usage="captureUsage"></tool-workspace>
     <template v-else-if="page==='overview'">
       <div class="period-toolbar"><label>统计范围<select v-model="period"><option value="">本期进行中</option><option v-for="b in state.batches" :value="b.id">{{b.id}} · {{stamp(b.time)}}</option></select></label><button class="soft-btn" @click="open('guide')"><ico name="book" :size="16"></ico>演示指引</button></div>
       <section class="value-hero">
@@ -93,10 +93,11 @@
 
     <template v-else-if="page==='meter'">
       <div class="metrics three"><metric v-for="m in meterStats" :item="m"></metric></div>
+      <div class="notice" v-if="integrationCount">已关联 {{integrationCount}} 条跨模块业务事件；它们生成的使用流水可在贡献确认中核验。工具产物进入向量库后检索，也会关联对应数据源和版本。</div>
       <section class="panel"><div class="panel-head"><div><h2>服务计量目录</h2><p>按成功用量生成贡献凭据。权益核销产生新增使用记录，已兑换的额度不重复计入收入。</p></div></div>
       <div class="resource-grid"><article v-for="(r,i) in state.resources"><span class="color-line" :class="'s'+i"></span><small>{{O.sides[r.side]}} · {{r.version}}</small><h3>{{r.name}}</h3><p>{{O.actors[r.owner]}}</p><b>{{r.price}} <small>Token / {{O.units[i]}}</small></b><div class="resource-subtotal"><span>本期计入收入</span><strong>{{fmt(meterRevenue[i])}} Token</strong></div></article></div></section>
       <section class="panel"><div class="panel-head"><h2>使用流水</h2><select v-model="meterFilter" aria-label="计量侧筛选"><option value="">全部计量侧</option><option v-for="(s,i) in O.sides" :value="String(i)">{{s}}</option></select></div>
-      <div class="tablewrap"><table><thead><tr><th>业务凭据</th><th>资源及版本</th><th>有效用量</th><th>计入收入</th><th>归属批次</th><th></th></tr></thead><tbody><tr v-for="u in meterList"><td class="mono">{{u.ref}}<small v-if="u.voucher">权益核销 · {{u.voucher}}</small></td><td>{{state.resources[u.r].name}}<small>{{u.version}}</small></td><td>{{fmt(u.qty)}} {{O.units[u.r]}}</td><td class="num">{{fmt(u.amount)}}</td><td>{{u.batch||'本期未结'}}</td><td><button class="text-link" @click="showEvidence(state.events.find(e=>e.id===u.event))">关联凭据</button></td></tr></tbody></table></div></section>
+      <div class="tablewrap"><table><thead><tr><th>业务凭据</th><th>资源及版本</th><th>来源</th><th>有效用量</th><th>计入收入</th><th>归属批次</th><th></th></tr></thead><tbody><tr v-for="u in meterList"><td class="mono">{{u.ref}}<small v-if="u.voucher">权益核销 · {{u.voucher}}</small></td><td>{{u.resourceName||state.resources[u.r].name}}<small>{{u.version}}</small></td><td>{{u.bridgeSource==='tool'?'工具工作台':u.bridgeSource==='vector'?'张量向量库':'人工登记'}}<small v-if="u.bridgeEventId">{{u.bridgeEventId}}</small></td><td>{{fmt(u.qty)}} {{O.units[u.r]}}</td><td class="num">{{fmt(u.amount)}}</td><td>{{u.batch||'本期未结'}}</td><td><button class="text-link" @click="showEvidence(state.events.find(e=>e.id===u.event))">关联凭据</button></td></tr></tbody></table></div></section>
     </template>
 
     <template v-else-if="page==='rules'">
@@ -144,7 +145,7 @@
   <template v-if="dialogKind==='evidence' && obj">
     <div class="dialog-summary"><b>{{obj.id}}</b><pill :text="obj.state"></pill></div>
     <div v-if="duplicateRecord" class="compare-box"><h3>同号凭据对照</h3><div class="compare-grid"><article v-for="(e,i) in [obj,duplicateRecord]"><small>{{i?'已确认记录':'本次上报'}}</small><b>{{e.id}} · {{e.ref}}</b><p>{{O.actors[e.actor]}}</p><p>{{state.resources[e.r].name}} {{e.version}}</p><p>{{fmt(e.qty)}} {{O.units[e.r]}} · {{e.state}}</p></article></div></div>
-    <dl class="details"><dt>贡献主体</dt><dd>{{O.actors[obj.actor]}} · {{O.sides[obj.r]}}</dd><dt>对象与版本</dt><dd>{{state.resources[obj.r].name}} · {{obj.version}}</dd><dt>业务凭据</dt><dd>{{obj.ref}}</dd><dt>贡献类型</dt><dd>{{obj.category}}</dd><dt>有效用量</dt><dd>{{fmt(obj.qty)}} {{O.units[obj.r]}}</dd><dt>质量 / 效用</dt><dd>{{obj.grade}} 级 / {{obj.utility}} 倍</dd><dt>证据摘要</dt><dd>{{obj.proof}}</dd><dt>核算归属</dt><dd>{{obj.batch||'尚未结算'}}</dd><template v-if="obj.review"><dt>核验意见</dt><dd>{{obj.review}}</dd></template></dl>
+    <dl class="details"><dt>贡献主体</dt><dd>{{O.actors[obj.actor]}} · {{O.sides[obj.r]}}</dd><dt>对象与版本</dt><dd>{{state.resources[obj.r].name}} · {{obj.version}}</dd><dt>业务凭据</dt><dd>{{obj.ref}}</dd><template v-if="obj.bridgeEventId"><dt>来源事件</dt><dd>{{obj.bridgeEventId}} · {{obj.domain}} · {{obj.assetRef}}</dd></template><dt>贡献类型</dt><dd>{{obj.category}}</dd><dt>有效用量</dt><dd>{{fmt(obj.qty)}} {{O.units[obj.r]}}</dd><dt>质量 / 效用</dt><dd>{{obj.grade}} 级 / {{obj.utility}} 倍</dd><dt>证据摘要</dt><dd>{{obj.proof}}</dd><dt>核算归属</dt><dd>{{obj.batch||'尚未结算'}}</dd><template v-if="obj.review"><dt>核验意见</dt><dd>{{obj.review}}</dd></template></dl>
     <template v-if="obj.state==='待核验'"><label>核验意见<input v-model.trim="form.note" maxlength="180"></label><div class="actions"><button class="primary-btn" @click="review(true)">确认有效贡献</button><button class="soft-btn" @click="review(false)">排除此事件</button></div></template>
     <button v-else class="soft-btn" @click="exportFile(obj,obj.id+'-贡献凭据.json')">导出贡献凭据</button>
   </template>
@@ -167,4 +168,4 @@
   </div><p v-if="err" class="error" role="alert">{{err}}</p></div></dialog>
 <div v-if="toast" class="toast" role="status">{{toast}}</div><div v-if="err&&!dialogKind" class="toast error" role="alert">{{err}} <button class="icon-btn" @click="err=''" aria-label="关闭">×</button></div>
 <p v-if="storageWarning" class="storagewarn" role="status">{{storageWarning}}</p>
-</div></div><script src="vendor/vue.global.js"></script><script src="js/icons.js"></script><script src="portal/operations.js"></script><script src="portal/navigation.js"></script><script src="portal/tools.js"></script><script>window.BJTU_OFFLINE=true</script><script src="portal/platform.js"></script></body></html>
+</div></div><script src="vendor/vue.global.js"></script><script src="js/icons.js"></script><script src="portal/operations.js"></script><script src="portal/navigation.js"></script><script src="portal/integration.js"></script><script src="portal/tools.js"></script><script>window.BJTU_OFFLINE=true</script><script src="portal/platform.js"></script></body></html>

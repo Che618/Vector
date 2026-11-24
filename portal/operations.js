@@ -4,7 +4,7 @@ const Operations = (() => {
   const units = ['条', '次', '次'];
   const basis = [100, 10, 5];
   const gradeFactor = { A: 1, B: 0.85, C: 0.65, D: 0 };
-  const actors = ['近岸海洋观测站', '海洋数据质控组', '剖面分析团队', '联合维护小组'];
+  const actors = ['近岸海洋观测站', '海洋数据质控组', '剖面分析团队', '联合维护小组', '天文数据团队', '生命科学数据团队'];
   const rights = [
     { name: '数据访问额度', cost: 120, unit: '100 条近岸观测数据', scope: '近岸温盐观测集' },
     { name: '优先计算服务', cost: 240, unit: '1 次优先分析作业', scope: '剖面分析工作流' },
@@ -35,16 +35,33 @@ const Operations = (() => {
     s.events.unshift(e);
     return e;
   }
-  function registerUse(s, r, qty, reference, time = now()) {
+  function registerUse(s, r, qty, reference, time = now(), attribution = {}) {
     const resource = s.resources[r];
     requireThat(resource, '请选择资源。'); whole(qty, 1, 100000, '有效用量');
     const ref = words(reference, '作业或凭证编号');
     requireThat(!s.uses.some(u => u.ref.toLowerCase() === ref.toLowerCase()), '该业务凭证已登记，请核对编号。');
+    const actor = attribution.actor ?? resource.owner;
+    whole(actor, 0, actors.length-1, '贡献主体编号');
     const u = {id:id(s,'USE'), r, qty, ref, time, version:resource.version, price:resource.price, amount:qty * resource.price, batch:''};
     s.uses.unshift(u);
-    const e = event(s,{actor:resource.owner, r, qty, ref, grade:'A', category:'使用贡献', version:u.version, proof:'调用回执 ' + ref + ' · 成功取用 ' + qty + units[r], use:u.id},time);
+    const e = event(s,{actor, r, qty, ref, grade:'A', category:'使用贡献', version:u.version, proof:attribution.proof || ('调用回执 ' + ref + ' · 成功取用 ' + qty + units[r]), use:u.id},time);
     u.event = e.id;
     log(s,'登记使用',u.id,resource.name + ' · ' + ref,time);
+    return u;
+  }
+  function importUsage(s, sourceEvent) {
+    requireThat(sourceEvent?.type === 'usage.succeeded', '请选择成功使用事件。');
+    const eventId=words(sourceEvent.eventId,'来源事件编号'), p=sourceEvent.payload||{};
+    requireThat(['tool','vector'].includes(p.source),'未知的事件来源。');
+    whole(p.quantity,1,100000,'来源用量');
+    const prior=(s.bridgeReceipts||[]).find(x=>x.eventId===eventId);
+    if(prior)return s.uses.find(u=>u.id===prior.useId);
+    const r=p.source==='tool'?1:0, domainActor={'海洋科学':p.source==='tool'?1:0,'天文科学':4,'生命科学':5};
+    const providerActor=actors.indexOf(p.provider), actor=providerActor>=0?providerActor:(domainActor[p.domain]??3);
+    const u=registerUse(s,r,p.quantity,'BR-'+eventId,sourceEvent.createdAt||now(),{actor,proof:((p.source==='tool'?'工具运行':'向量检索')+' · '+(p.resourceName||p.resourceId||'数据服务')+' · '+(p.reference||eventId)).slice(0,180)});
+    Object.assign(u,{version:p.version||u.version,resourceName:p.resourceName||s.resources[r].name,bridgeEventId:eventId,bridgeSource:p.source,domain:p.domain||'',sourceRef:p.reference||'',assetRef:p.outputRef||p.resourceId||''});
+    Object.assign(s.events.find(e=>e.id===u.event),{version:u.version,resourceName:u.resourceName,bridgeEventId:eventId,bridgeSource:p.source,domain:u.domain,assetRef:u.assetRef});
+    (s.bridgeReceipts ||= []).push({eventId,useId:u.id,source:p.source,reference:p.reference||'',resourceRef:p.resourceId||''});
     return u;
   }
   function declare(s, f, time=now()) {
@@ -190,6 +207,6 @@ const Operations = (() => {
     plan(s,{title:'补齐 BX-17 夜间盐度缺测段',criterion:'提供至少 24 条订正记录、质量复核报告及新版本号。',minQty:24,budget:160,r:0,actor:3,kind:'周期更新',due:'2026-11-30'},'2026-11-20T02:00:00.000Z');
     return s;
   }
-  return {sides,units,basis,gradeFactor,actors,rights,defaultRule,total,clone,seed,registerUse,declare,review,simulate,settle,balance,reserveBalance,issue,redeem,plan,submit,acceptTask};
+  return {sides,units,basis,gradeFactor,actors,rights,defaultRule,total,clone,seed,registerUse,importUsage,declare,review,simulate,settle,balance,reserveBalance,issue,redeem,plan,submit,acceptTask};
 })();
 if(typeof module!=='undefined' && module.exports) module.exports=Operations;

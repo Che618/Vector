@@ -36,7 +36,7 @@
       try { saved = JSON.parse(localStorage.getItem(storeKey) || 'null'); } catch {}
       return {
         data: saved || seed(), domains, search:'', domainFilter:'全部领域', kindFilter:'全部类型', statusFilter:'全部状态',
-        runFilter:'全部状态', submissionFilter:'全部状态', selectedTool:null, toast:'', saveWarning:'',
+        runFilter:'全部状态', runCase:'正常样例', submissionFilter:'全部状态', selectedTool:null, toast:'', saveWarning:'',
         draft:{name:'',domain:domains[0],capability:'',kind:'代码工具',provider:'',version:'1.0.0',input:'',output:'',runtime:'',license:'',source:'',sample:'',description:''},
         flowDraft:{name:'',domain:domains[0],purpose:'',toolIds:[]}
       };
@@ -75,11 +75,20 @@
       publishTool(tool) { tool.status='已发布'; tool.updated=now().slice(0,10); this.notify('工具版本已发布到能力目录。'); },
       toggleTool(tool) { tool.status=tool.status==='已发布'?'已停用':'已发布'; tool.updated=now().slice(0,10); this.notify(tool.status==='已发布'?'工具已重新启用。':'工具已停用，历史运行记录保留。'); },
       toolActionLabel(tool) { return tool.status==='待验证'?'运行接入检查':tool.status==='待审核'?'审核并发布':tool.status==='已发布'?'停用版本':tool.status==='已停用'?'重新启用':''; },
+      emitRunEvents(run,tool) {
+        if(run.status!=='成功'||!window.ScienceBridge)return;
+        const outputRef='OUT-'+run.id;
+        const report=['工具演示处理报告','工具：'+tool.name+' v'+tool.version,'领域：'+tool.domain,'运行编号：'+run.id,'输入引用：'+run.inputRef,'质量结果：'+run.quality,'说明：此为平台联动演示报告，不包含真实加工数据。'].join('\n');
+        run.outputRef=outputRef;
+        window.ScienceBridge.publish({eventId:'TOOL-ASSET-'+run.id,type:'tool.output.available',status:'待导入',payload:{assetId:outputRef,runId:run.id,toolId:tool.id,toolName:tool.name,toolVersion:tool.version,domain:tool.domain,provider:tool.provider,inputRef:run.inputRef,content:report}});
+        const usage=window.ScienceBridge.publish({eventId:'TOOL-USAGE-'+run.id,type:'usage.succeeded',status:'待计量',payload:{source:'tool',domain:tool.domain,provider:tool.provider,resourceId:tool.id,resourceName:tool.name,version:tool.version,quantity:1,unit:'次',reference:run.id,outputRef}});
+        this.$emit('usage',usage);
+      },
       runTool(tool) {
         if(tool.status!=='已发布'){this.notify('只有已发布版本可以试运行。');return;}
-        const fail=tool.id==='TOOL-003';
+        const fail=this.runCase==='失败样例';
         const run={id:'RUN-'+String(26024+this.data.runs.length).padStart(5,'0'),toolId:tool.id,toolName:tool.name,version:tool.version,domain:tool.domain,inputRef:tool.sample,status:fail?'失败':'成功',quality:fail?'样例边界检查发现时间字段格式不匹配':'接口、输出结构与样例检查通过',duration:fail?'6 秒':'12 秒',time:new Date().toLocaleString('sv-SE',{timeZone:'Asia/Shanghai',hour12:false}).slice(0,16)};
-        this.data.runs.unshift(run); this.notify(run.status==='成功'?'试运行完成，记录了输入引用和质量结果。':'试运行失败，已生成可追溯的运行记录。'); this.closeTool(); location.hash='/tools/maintain';
+        this.data.runs.unshift(run); this.emitRunEvents(run,tool); this.notify(run.status==='成功'?'试运行完成，待核验用量和演示产物已关联。':'试运行失败，已生成可追溯的运行记录。'); this.closeTool(); location.hash='/tools/maintain';
       },
       resetFlowDraft() { this.flowDraft={name:'',domain:this.domains[0],purpose:'',toolIds:[]}; },
       saveFlow(publish) {
@@ -92,10 +101,12 @@
       runFlow(flow) {
         const selected=flow.toolIds.map(id=>this.data.tools.find(t=>t.id===id)).filter(Boolean);
         if(flow.status!=='已发布'||selected.some(t=>t.status!=='已发布')){this.notify('流程或其中的工具版本未发布，不能试运行。');return;}
-        selected.forEach((tool,index)=>{
-          const fail=tool.id==='TOOL-003';
-          this.data.runs.unshift({id:'RUN-'+String(26024+this.data.runs.length).padStart(5,'0'),flowId:flow.id,step:index+1,toolId:tool.id,toolName:tool.name,version:tool.version,domain:tool.domain,inputRef:flow.id+' / 示例输入',status:fail?'失败':'成功',quality:fail?'样例边界检查发现时间字段格式不匹配':'节点输入输出结构检查通过',duration:fail?'6 秒':'12 秒',time:new Date().toLocaleString('sv-SE',{timeZone:'Asia/Shanghai',hour12:false}).slice(0,16)});
-        });
+        for(const [index,tool] of selected.entries()){
+          const fail=this.runCase==='失败样例';
+          const run={id:'RUN-'+String(26024+this.data.runs.length).padStart(5,'0'),flowId:flow.id,step:index+1,toolId:tool.id,toolName:tool.name,version:tool.version,domain:tool.domain,inputRef:flow.id+' / 示例输入',status:fail?'失败':'成功',quality:fail?'样例边界检查发现时间字段格式不匹配':'节点输入输出结构检查通过',duration:fail?'6 秒':'12 秒',time:new Date().toLocaleString('sv-SE',{timeZone:'Asia/Shanghai',hour12:false}).slice(0,16)};
+          this.data.runs.unshift(run); this.emitRunEvents(run,tool);
+          if(fail)break;
+        }
         this.notify('流程试运行已完成，逐节点运行记录已生成。'); location.hash='/tools/maintain';
       },
       reviewSubmission(submission,pass) {
@@ -111,6 +122,7 @@
     },
     template: `
       <div class="tools-workspace">
+        <section class="panel"><div class="panel-head"><div><h2>处理、入库与使用联动</h2><p>成功试运行生成演示报告和待核验用量。报告可在张量向量库的数据接入页接收，编码入库后的检索命中也会回到收益计量。</p></div><label>试运行场景<select v-model="runCase"><option>正常样例</option><option>失败样例</option></select></label></div><div class="actions"><a class="soft-btn" href="#/vector/intake">向量库接收产物</a><a class="soft-btn" href="#/value/meter">查看使用计量</a></div></section>
         <section class="metrics three tools-metrics">
           <article class="metric"><div><span>已发布工具</span><i class="mini-tile teal">{{readyCount}}</i></div><small>仅发布版本可进入流程</small></article>
           <article class="metric"><div><span>接入与审核待办</span><i class="mini-tile amber">{{pendingCount}}</i></div><small>验证、审核和社区提交</small></article>
@@ -153,7 +165,7 @@
 
         <template v-else-if="page==='maintain'">
           <section class="metrics three"><article class="metric"><div><span>成功运行</span></div><b>{{data.runs.filter(r=>r.status==='成功').length}}</b><small>当前演示记录</small></article><article class="metric"><div><span>异常待排查</span></div><b>{{data.runs.filter(r=>r.status==='失败').length}}</b><small>可关联工具版本与输入引用</small></article><article class="metric"><div><span>运行记录</span></div><b>{{data.runs.length}}</b><small>按运行编号追溯</small></article></section>
-          <section class="panel"><div class="panel-head"><div><h2>运行记录</h2><p>演示试运行只生成本地记录，不会调用外部服务。</p></div><select v-model="runFilter"><option>全部状态</option><option>成功</option><option>失败</option></select></div><div class="tablewrap"><table><thead><tr><th>运行编号</th><th>工具 / 版本</th><th>领域</th><th>输入引用</th><th>状态与质量结果</th><th>耗时</th><th>时间</th></tr></thead><tbody><tr v-for="r in filteredRuns" :key="r.id"><td class="mono">{{r.id}}</td><td>{{r.toolName}}<small>{{r.toolId}} · v{{r.version}}</small></td><td>{{r.domain}}</td><td class="mono">{{r.inputRef}}</td><td><span class="pill" :class="pillClass(r.status)">{{r.status}}</span><small>{{r.quality}}</small></td><td>{{r.duration}}</td><td>{{r.time}}</td></tr><tr v-if="!filteredRuns.length"><td colspan="7"><empty text="暂无符合条件的运行记录"></empty></td></tr></tbody></table></div></section>
+          <section class="panel"><div class="panel-head"><div><h2>运行记录</h2><p>演示试运行只生成本地记录，不会调用外部服务。</p></div><select v-model="runFilter"><option>全部状态</option><option>成功</option><option>失败</option></select></div><div class="tablewrap"><table><thead><tr><th>运行编号</th><th>工具 / 版本</th><th>领域</th><th>输入引用</th><th>状态与质量结果</th><th>耗时</th><th>时间</th><th>产物</th></tr></thead><tbody><tr v-for="r in filteredRuns" :key="r.id"><td class="mono">{{r.id}}</td><td>{{r.toolName}}<small>{{r.toolId}} · v{{r.version}}</small></td><td>{{r.domain}}</td><td class="mono">{{r.inputRef}}</td><td><span class="pill" :class="pillClass(r.status)">{{r.status}}</span><small>{{r.quality}}</small></td><td>{{r.duration}}</td><td>{{r.time}}</td><td><a v-if="r.outputRef" class="text-link" href="#/vector/intake">{{r.outputRef}} · 入库</a><span v-else class="muted">无</span></td></tr><tr v-if="!filteredRuns.length"><td colspan="8"><empty text="暂无符合条件的运行记录"></empty></td></tr></tbody></table></div></section>
           <section class="panel"><div class="panel-head"><div><h2>工具状态</h2><p>查看发布版本、接入状态和最近试运行；停用不删除历史记录。</p></div></div><div class="tablewrap"><table><thead><tr><th>工具</th><th>领域</th><th>版本</th><th>状态</th><th>最近运行</th><th>操作</th></tr></thead><tbody><tr v-for="t in data.tools" :key="t.id"><td>{{t.name}}<small>{{t.id}}</small></td><td>{{t.domain}}</td><td class="mono">{{t.version}}</td><td><span class="pill" :class="pillClass(t.status)">{{t.status}}</span></td><td>{{data.runs.find(r=>r.toolId===t.id)?.time || '尚无运行'}}</td><td><button class="text-link" @click="startTool(t)">详情</button></td></tr></tbody></table></div></section>
         </template>
 

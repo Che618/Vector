@@ -53,11 +53,7 @@
       <div><small>依据</small><b>{{handoff[0]}}</b></div><div><small>产出</small><b>{{handoff[1]}}</b></div>
       <div class="handoff-links"><a v-for="[dest,label] in handoff[2]" :href="'#/value/'+dest">{{label}}</a></div>
     </section>
-    <template v-if="group==='tools'">
-      <section class="panel"><div class="panel-head"><h2>{{info.title}}结构</h2><pill text="待接入"></pill></div><div class="tool-frame"><span class="tile"><ico :name="info.icon" :size="28"></ico></span><div><h3>{{info.block}}</h3><p>本页预留给工具集成与管理团队接入业务组件。</p></div></div>
-        <div class="field-grid"><div v-for="f in info.fields"><small>预留字段</small><b>{{f}}</b></div></div>
-      </section>
-    </template>
+    <tool-workspace v-if="group==='tools'" :page="page"></tool-workspace>
     <template v-else-if="page==='overview'">
       <div class="period-toolbar"><label>统计范围<select v-model="period"><option value="">本期进行中</option><option v-for="b in state.batches" :value="b.id">{{b.id}} · {{stamp(b.time)}}</option></select></label><button class="soft-btn" @click="open('guide')"><ico name="book" :size="16"></ico>演示指引</button></div>
       <section class="value-hero">
@@ -171,4 +167,4 @@
   </div><p v-if="err" class="error" role="alert">{{err}}</p></div></dialog>
 <div v-if="toast" class="toast" role="status">{{toast}}</div><div v-if="err&&!dialogKind" class="toast error" role="alert">{{err}} <button class="icon-btn" @click="err=''" aria-label="关闭">×</button></div>
 <p v-if="storageWarning" class="storagewarn" role="status">{{storageWarning}}</p>
-</div></div><script src="vendor/vue.global.js"></script><script src="js/icons.js"></script><script src="portal/operations.js"></script><script src="portal/navigation.js"></script><script>window.BJTU_OFFLINE=true</script><script src="portal/platform.js"></script></body></html>
+</div></div><script src="vendor/vue.global.js"></script><script src="js/icons.js"></script><script src="portal/operations.js"></script><script src="portal/navigation.js"></script><script src="portal/tools.js"></script><script>window.BJTU_OFFLINE=true</script><script src="portal/platform.js"></script></body></html>

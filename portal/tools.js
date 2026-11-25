@@ -122,7 +122,7 @@
     },
     template: `
       <div class="tools-workspace">
-        <section class="panel"><div class="panel-head"><div><h2>处理、入库与使用联动</h2><p>成功试运行生成演示报告和待核验用量。报告可在张量向量库的数据接入页接收，编码入库后的检索命中也会回到收益计量。</p></div><label>试运行场景<select v-model="runCase"><option>正常样例</option><option>失败样例</option></select></label></div><div class="actions"><a class="soft-btn" href="#/vector/intake">向量库接收产物</a><a class="soft-btn" href="#/value/meter">查看使用计量</a></div></section>
+        <section class="panel"><div class="panel-head"><div><h2>处理、入库与使用联动</h2><p>成功试运行生成演示报告和待核验用量。报告可在Token张量向量库的数据接入页接收，编码入库后的检索命中也会回到收益计量。</p></div><label>试运行场景<select v-model="runCase"><option>正常样例</option><option>失败样例</option></select></label></div><div class="actions"><a class="soft-btn" href="#/vector/intake">向量库接收产物</a><a class="soft-btn" href="#/value/meter">查看使用计量</a></div></section>
         <section class="metrics three tools-metrics">
           <article class="metric"><div><span>已发布工具</span><i class="mini-tile teal">{{readyCount}}</i></div><small>仅发布版本可进入流程</small></article>
           <article class="metric"><div><span>接入与审核待办</span><i class="mini-tile amber">{{pendingCount}}</i></div><small>验证、审核和社区提交</small></article>

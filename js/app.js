@@ -44,7 +44,7 @@ const app=createApp({setup(){
  function open(name){modal.value=name;nextTick(()=>{if(dialogEl.value&&!dialogEl.value.open)dialogEl.value.showModal();const body=dialogEl.value?.querySelector('.dlg-body');if(body)body.scrollTop=0})}
  function closeDialog(){if(dialogEl.value?.open)dialogEl.value.close();modal.value=''}
  function go(p){if(page.value!==p){location.hash='/'+p;applyRoute()}else{closeDialog();mobile.value=false}}
- function applyRoute(){let path=location.hash.replace(/^#\/?/,'').split('?')[0];let p=guides.some(g=>g[0]===path)?path:'home';if(page.value!==p){closeDialog();err.value='';page.value=p;window.scrollTo(0,0)}mobile.value=false;document.title=info.value[1]+' · 张量向量库'}
+ function applyRoute(){let path=location.hash.replace(/^#\/?/,'').split('?')[0];let p=guides.some(g=>g[0]===path)?path:'home';if(page.value!==p){closeDialog();err.value='';page.value=p;window.scrollTo(0,0)}mobile.value=false;document.title=info.value[1]+' · Token张量向量库'}
  function themeSwitch(){theme.value=WorkspaceTheme.applyTheme(theme.value==='classic'?'smart':'classic');say('已切换至'+(theme.value==='classic'?'传统':'智能')+'主题')}
  function changeMode(){draft.format=draft.mode==='numeric'?'json':'txt';draft.input='';draft.file='';err.value=''}
  function loadExample(){if(draft.mode==='numeric'){draft.name='海温剖面张量示例';draft.input=Model.numericText;draft.format='json'}else{draft.name='多学科观测笔记';draft.input=Model.demoText;draft.format='txt'}draft.file='';draft.domain=draft.mode==='text'?'其他领域':'海洋科学';err.value='';say('已加载示例，可修改后登记')}

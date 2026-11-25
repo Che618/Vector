@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1220" viewBox="0 0 1920 1220" role="img" aria-labelledby="title desc">
+  <title id="title">科学数据平台逻辑架构图</title>
+  <desc id="desc">展示科学数据处理工具集成、张量向量库、Token收益分配与长效供给三个工作区，以及工具产物、用量事件、人工核验和维护反馈之间的逻辑关系。</desc>
+  <defs>
+    <marker id="arrow-teal" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1 1 L11 6 L1 11 Z" fill="#168C83"/></marker>
+    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1 1 L11 6 L1 11 Z" fill="#2878A5"/></marker>
+    <marker id="arrow-gold" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1 1 L11 6 L1 11 Z" fill="#BF8D27"/></marker>
+    <marker id="arrow-coral" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1 1 L11 6 L1 11 Z" fill="#D56A50"/></marker>
+    <marker id="arrow-ink" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1 1 L11 6 L1 11 Z" fill="#526976"/></marker>
+    <style>
+      text { font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; }
+      .title { font-size: 42px; font-weight: 700; fill: #172B3A; }
+      .subtitle { font-size: 22px; fill: #536878; }
+      .laneTitle { font-size: 26px; font-weight: 700; }
+      .nodeTitle { font-size: 21px; font-weight: 700; }
+      .body { font-size: 17px; fill: #536878; }
+      .small { font-size: 16px; fill: #536878; }
+      .edgeLabel { font-size: 16px; font-weight: 600; }
+    </style>
+  </defs>
+
+  <rect width="1920" height="1220" fill="#F7F9FA"/>
+  <text x="64" y="78" class="title">科学数据平台逻辑架构</text>
+  <text x="66" y="119" class="subtitle">工具生产科学数据，向量库提供可追溯检索，Token 工作区核验贡献并支持长效供给</text>
+  <rect x="64" y="146" width="78" height="5" rx="2.5" fill="#168C83"/>
+
+  <g>
+    <rect x="66" y="174" width="1788" height="72" rx="8" fill="#FFFFFF" stroke="#D8E1E5"/>
+    <text x="92" y="203" class="nodeTitle" fill="#172B3A">参与角色与入口</text>
+    <text x="310" y="203" class="body">工具提供方：登记与维护工具</text>
+    <text x="740" y="203" class="body">科研用户：提交数据、运行流程、检索结果</text>
+    <text x="1320" y="203" class="body">运营核验方：确认贡献、结算规则与供给交付</text>
+    <text x="92" y="229" class="small">首页按三个工作区导航；数据、凭据和运行记录分别归属对应工作区。</text>
+  </g>
+
+  <!-- Bridge layer -->
+  <g>
+    <rect x="66" y="274" width="1788" height="78" rx="8" fill="#FFFFFF" stroke="#AFC2C9" stroke-width="1.5"/>
+    <rect x="66" y="274" width="10" height="78" rx="5" fill="#526976"/>
+    <text x="96" y="306" class="nodeTitle" fill="#172B3A">跨工作区事件桥接</text>
+    <text x="96" y="333" class="small">同源事件日志</text>
+    <line x1="370" y1="288" x2="370" y2="339" stroke="#D8E1E5"/>
+    <text x="408" y="306" class="body">事件 ID 去重</text>
+    <text x="620" y="306" class="body">来源、版本与业务引用</text>
+    <text x="955" y="306" class="body">状态更新</text>
+    <text x="1135" y="306" class="body">跨标签页通知</text>
+    <text x="408" y="333" class="small">工具产物可登记到向量库；成功调用与实际检索返回形成待计量事件。</text>
+    <rect x="1530" y="290" width="288" height="43" rx="6" fill="#EDF1F3"/>
+    <text x="1544" y="308" class="small" font-weight="700">当前演示：浏览器同源联动</text>
+    <text x="1544" y="327" class="small">不等同于共享后端服务</text>
+  </g>
+
+  <!-- Workspace lane surfaces -->
+  <rect x="66" y="378" width="520" height="626" rx="9" fill="#EFF7F5" stroke="#9ACCC3"/>
+  <rect x="700" y="378" width="520" height="626" rx="9" fill="#EFF5F8" stroke="#A7C9DA"/>
+  <rect x="1334" y="378" width="520" height="626" rx="9" fill="#FBF7ED" stroke="#DEC98E"/>
+  <rect x="66" y="378" width="520" height="7" rx="3.5" fill="#168C83"/>
+  <rect x="700" y="378" width="520" height="7" rx="3.5" fill="#2878A5"/>
+  <rect x="1334" y="378" width="520" height="7" rx="3.5" fill="#BF8D27"/>
+  <text x="92" y="424" class="laneTitle" fill="#168C83">01  科学数据处理工具工作区</text>
+  <text x="726" y="424" class="laneTitle" fill="#2878A5">02  张量向量库工作区</text>
+  <text x="1360" y="424" class="laneTitle" fill="#A77718">03  Token 价值运营工作区</text>
+
+  <!-- Tool workspace nodes -->
+  <g>
+    <rect x="110" y="456" width="430" height="78" rx="7" fill="#FFFFFF" stroke="#168C83"/>
+    <text x="132" y="486" class="nodeTitle" fill="#168C83">工具目录与注册</text>
+    <text x="132" y="514" class="body">领域、能力、版本、提供方、输入输出契约</text>
+    <line x1="325" y1="534" x2="325" y2="555" stroke="#168C83" stroke-width="2.5" marker-end="url(#arrow-teal)"/>
+    <rect x="110" y="559" width="430" height="78" rx="7" fill="#FFFFFF" stroke="#168C83"/>
+    <text x="132" y="589" class="nodeTitle" fill="#168C83">接入验证与审核发布</text>
+    <text x="132" y="617" class="body">依赖、许可证、样例与接入检查</text>
+    <line x1="325" y1="637" x2="325" y2="658" stroke="#168C83" stroke-width="2.5" marker-end="url(#arrow-teal)"/>
+    <rect x="110" y="662" width="430" height="78" rx="7" fill="#FFFFFF" stroke="#168C83"/>
+    <text x="132" y="692" class="nodeTitle" fill="#168C83">处理链配置与试运行</text>
+    <text x="132" y="720" class="body">组合已发布工具，保留节点顺序与运行状态</text>
+    <line x1="325" y1="740" x2="325" y2="761" stroke="#168C83" stroke-width="2.5" marker-end="url(#arrow-teal)"/>
+    <rect x="110" y="765" width="430" height="93" rx="7" fill="#FFFFFF" stroke="#168C83"/>
+    <text x="132" y="796" class="nodeTitle" fill="#168C83">运行凭据与工具产物</text>
+    <text x="132" y="824" class="body">运行编号、工具版本、输入引用、质量结果</text>
+    <text x="132" y="847" class="small">成功运行发布工具侧事件；产物进入待接收区</text>
+    <rect x="110" y="882" width="430" height="80" rx="7" fill="#E6F4F1" stroke="#9ACCC3"/>
+    <text x="132" y="912" class="nodeTitle" fill="#168C83">社区扩展与运维</text>
+    <text x="132" y="940" class="body">版本变更、审核材料、失败原因与维护记录</text>
+  </g>
+
+  <!-- Tensor/vector workspace nodes -->
+  <g>
+    <rect x="744" y="456" width="430" height="72" rx="7" fill="#FFFFFF" stroke="#2878A5"/>
+    <text x="766" y="484" class="nodeTitle" fill="#2878A5">数据接入</text>
+    <text x="766" y="511" class="body">科学原始数据或工具运行产物</text>
+    <line x1="959" y1="528" x2="959" y2="545" stroke="#2878A5" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+    <rect x="744" y="549" width="430" height="72" rx="7" fill="#FFFFFF" stroke="#2878A5"/>
+    <text x="766" y="577" class="nodeTitle" fill="#2878A5">解析、分片与质量检查</text>
+    <text x="766" y="604" class="body">格式检查、去重、阈值筛选并保留来源位置</text>
+    <line x1="959" y1="621" x2="959" y2="638" stroke="#2878A5" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+    <rect x="744" y="642" width="430" height="72" rx="7" fill="#FFFFFF" stroke="#2878A5"/>
+    <text x="766" y="670" class="nodeTitle" fill="#2878A5">向量生成</text>
+    <text x="766" y="697" class="body">文本特征编码；数值张量归一化</text>
+    <line x1="959" y1="714" x2="959" y2="731" stroke="#2878A5" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+    <rect x="744" y="735" width="430" height="72" rx="7" fill="#FFFFFF" stroke="#2878A5"/>
+    <text x="766" y="763" class="nodeTitle" fill="#2878A5">索引与版本管理</text>
+    <text x="766" y="790" class="body">增量预检、发布版本、差异查看与版本切换</text>
+    <line x1="959" y1="807" x2="959" y2="824" stroke="#2878A5" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+    <rect x="744" y="828" width="430" height="88" rx="7" fill="#FFFFFF" stroke="#2878A5"/>
+    <text x="766" y="859" class="nodeTitle" fill="#2878A5">相似检索与效果评测</text>
+    <text x="766" y="887" class="body">向量、BM25 或混合排序；查看命中和指标</text>
+    <rect x="744" y="932" width="430" height="38" rx="6" fill="#E8F2F7"/>
+    <text x="760" y="957" class="small" fill="#2878A5">结果回溯：数据源、原文位置、编码配置、索引版本</text>
+  </g>
+
+  <!-- Token workspace nodes -->
+  <g>
+    <rect x="1378" y="456" width="430" height="69" rx="7" fill="#FFFFFF" stroke="#BF8D27"/>
+    <text x="1400" y="484" class="nodeTitle" fill="#A77718">使用与计量</text>
+    <text x="1400" y="511" class="body">工具成功节点与检索实际返回片段</text>
+    <line x1="1593" y1="525" x2="1593" y2="538" stroke="#BF8D27" stroke-width="2.5" marker-end="url(#arrow-gold)"/>
+    <rect x="1378" y="542" width="430" height="69" rx="7" fill="#FFFFFF" stroke="#BF8D27"/>
+    <text x="1400" y="570" class="nodeTitle" fill="#A77718">贡献凭据与主体映射</text>
+    <text x="1400" y="597" class="body">关联主体、资源版本、业务编号与证据</text>
+    <line x1="1593" y1="611" x2="1593" y2="624" stroke="#BF8D27" stroke-width="2.5" marker-end="url(#arrow-gold)"/>
+    <rect x="1378" y="628" width="430" height="69" rx="7" fill="#FFFFFF" stroke="#BF8D27"/>
+    <text x="1400" y="656" class="nodeTitle" fill="#A77718">人工核验与去重</text>
+    <text x="1400" y="683" class="body">确认有效贡献，排除重复或无效事件</text>
+    <line x1="1593" y1="697" x2="1593" y2="710" stroke="#BF8D27" stroke-width="2.5" marker-end="url(#arrow-gold)"/>
+    <rect x="1378" y="714" width="430" height="69" rx="7" fill="#FFFFFF" stroke="#BF8D27"/>
+    <text x="1400" y="742" class="nodeTitle" fill="#A77718">分配试算与结算</text>
+    <text x="1400" y="769" class="body">调整权重、比较建议、确认入账并保存快照</text>
+    <line x1="1593" y1="783" x2="1593" y2="796" stroke="#BF8D27" stroke-width="2.5" marker-end="url(#arrow-gold)"/>
+    <rect x="1378" y="800" width="430" height="69" rx="7" fill="#FFFFFF" stroke="#BF8D27"/>
+    <text x="1400" y="828" class="nodeTitle" fill="#A77718">权益兑换与业务追溯</text>
+    <text x="1400" y="855" class="body">区分已获权益与已核销服务，留存操作凭据</text>
+    <line x1="1593" y1="869" x2="1593" y2="882" stroke="#BF8D27" stroke-width="2.5" marker-end="url(#arrow-gold)"/>
+    <rect x="1378" y="886" width="430" height="80" rx="7" fill="#F8F2E3" stroke="#DEC98E"/>
+    <text x="1400" y="916" class="nodeTitle" fill="#A77718">长效供给任务</text>
+    <text x="1400" y="944" class="body">留存预算支持补采、订正或加工，验收形成维护贡献</text>
+  </g>
+
+  <!-- Cross-workspace data and event arrows -->
+  <path d="M540 806 H650 V492 H738" fill="none" stroke="#168C83" stroke-width="3" marker-end="url(#arrow-teal)"/>
+  <rect x="651" y="560" width="31" height="207" rx="5" fill="#F7F9FA"/>
+  <text x="674" y="752" class="edgeLabel" fill="#168C83" transform="rotate(-90 674 752)">工具产物与来源信息</text>
+  <path d="M540 840 H610 V357" fill="none" stroke="#168C83" stroke-width="3" marker-end="url(#arrow-teal)"/>
+  <rect x="589" y="537" width="29" height="220" rx="5" fill="#F7F9FA"/>
+  <text x="611" y="744" class="edgeLabel" fill="#168C83" transform="rotate(-90 611 744)">成功调用事件与运行凭据</text>
+  <path d="M1174 872 H1254 V357" fill="none" stroke="#2878A5" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <rect x="1233" y="524" width="29" height="231" rx="5" fill="#F7F9FA"/>
+  <text x="1255" y="742" class="edgeLabel" fill="#2878A5" transform="rotate(-90 1255 742)">实际命中片段、数据源与版本</text>
+  <path d="M1828 352 V490 H1813" fill="none" stroke="#BF8D27" stroke-width="3" marker-end="url(#arrow-gold)"/>
+  <rect x="1625" y="355" width="190" height="25" rx="4" fill="#F7F9FA"/>
+  <text x="1633" y="374" class="edgeLabel" fill="#A77718">待计量事件导入</text>
+  <path d="M1378 927 H1298 V771 H1180" fill="none" stroke="#D56A50" stroke-width="3" stroke-dasharray="10 8" marker-end="url(#arrow-coral)"/>
+  <rect x="1281" y="793" width="29" height="124" rx="5" fill="#F7F9FA"/>
+  <text x="1303" y="908" class="edgeLabel" fill="#D56A50" transform="rotate(-90 1303 908)">维护版本同步</text>
+  <!-- Legend and implementation boundary -->
+  <g>
+    <line x1="70" y1="1072" x2="132" y2="1072" stroke="#526976" stroke-width="3" marker-end="url(#arrow-ink)"/>
+    <text x="150" y="1078" class="small">实线：当前演示中的业务流或事件流</text>
+    <line x1="520" y1="1072" x2="582" y2="1072" stroke="#D56A50" stroke-width="3" stroke-dasharray="9 7" marker-end="url(#arrow-coral)"/>
+    <text x="600" y="1078" class="small">虚线：生产化建议补充的自动化反馈</text>
+    <rect x="1040" y="1044" width="814" height="74" rx="7" fill="#FFFFFF" stroke="#D8E1E5"/>
+    <text x="1062" y="1073" class="nodeTitle" fill="#D56A50">实现边界</text>
+    <text x="1190" y="1073" class="small">当前为浏览器本地演示；供给验收不会自动写入向量库，</text>
+    <text x="1190" y="1099" class="small">生产化需接入共享后端、身份权限、任务与资源版本服务。</text>
+    <text x="70" y="1152" class="small">Token 为演示服务权益单位；费率、权重与主体映射均为可调整示例规则。</text>
+    <text x="70" y="1184" class="small">科学数据平台 · 系统逻辑架构</text>
+  </g>
+</svg>
+
+

@@ -1,0 +1,18 @@
+MONO_WASM: WebAssembly resource does not have the expected content type "application/wasm", so falling back to slower ArrayBuffer instantiation.
+Inspect result written to file: E:\进组\课题五\Vector\.codex-build\candidate.pptx.inspect.ndjson
+node:internal/fs/promises:1345
+  return new FileHandle(await PromisePrototypeThen(
+                        ^
+
+Error: EEXIST: file already exists, open 'E:\进组\课题五\Vector\.codex-build\validation.json'
+    at async open (node:internal/fs/promises:1345:25)
+    at async Object.writeFile (node:internal/fs/promises:1972:14)
+    at async finalizePresentation (file:///C:/Users/cheli/.codex/plugins/cache/openai-primary-runtime/presentations/26.1123.11515/skills/presentations/container_tools/artifact_tool_utils.mjs:1058:5)
+    at async file:///E:/%E8%BF%9B%E7%BB%84/%E8%AF%BE%E9%A2%98%E4%BA%94/Vector/.codex-build/build_deck.mjs:353:16 {
+  errno: -4075,
+  code: 'EEXIST',
+  syscall: 'open',
+  path: 'E:\\进组\\课题五\\Vector\\.codex-build\\validation.json'
+}
+
+Node.js v24.22.3

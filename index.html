@@ -5,9 +5,8 @@
 <link rel="icon" href="assets/mark.svg"><link rel="stylesheet" href="portal/portal.css"><link rel="stylesheet" href="portal/value.css">
 </head><body><div id="portal" v-cloak><div :class="{'value-theme':group==='value'||group==='tools'}">
 <header class="global">
-  <a href="#/platform" class="brand"><img src="assets/mark.svg" alt=""><span>北交大<span class="brand-sep">/</span>科学数据平台</span></a>
-  <nav class="global-nav" aria-label="平台导航"><a href="#/platform" :class="{on:group==='platform'}">平台首页</a><a v-for="m in modules" :href="m.link" :class="{on:group===m.key}">{{m.short}}</a></nav>
-  <span class="environment"><i></i>本地演示</span>
+  <a href="#/platform" class="brand"><img src="assets/mark.svg" alt=""><span>北交大模块</span></a>
+  <nav class="global-nav" aria-label="平台导航"><a v-for="m in modules" :href="m.link" :class="{on:group===m.key}">{{m.short}}</a></nav>
 </header>
 
 <main v-if="group==='platform'" class="portal-main">
@@ -33,7 +32,7 @@
   </div>
 </main>
 
-<div v-else-if="group==='vector'" class="vector-host"><div v-if="offline" class="local-vector"><a href="vector.html" target="_blank">独立打开向量库</a></div><iframe ref="vectorFrame" title="张量向量库九页工作台" :src="vectorSource"></iframe></div>
+<div v-else-if="group==='vector'" class="vector-host"><div class="local-vector"><a :href="vectorSource" target="_blank" rel="noopener">独立打开向量库</a></div><iframe ref="vectorFrame" title="Token张量向量库九页工作台" :src="vectorSource"></iframe></div>
 
 <div v-else class="shell">
   <aside class="sidebar"><div class="side-brand"><span class="side-icon"><ico :name="group==='value'?'income':'tool'" :size="23"></ico></span><div><b>{{group==='value'?'Token收益分配与供给':'工具管理工作台'}}</b><small>{{group==='value'?'TOKEN DISTRIBUTION':'TOOL REGISTRY'}}</small></div></div>
@@ -41,7 +40,7 @@
     <div class="side-note"><ico name="flask" :size="17"></ico>北京交通大学 · 演示工作区</div>
   </aside>
   <main class="work">
-    <p class="bread"><a href="#/platform">平台首页</a><span>/</span>{{group==='value'?'Token收益分配与供给':'工具集成与管理'}}<span>/</span>{{info.title}}</p>
+    <p class="bread"><a href="#/platform">北交大模块</a><span>/</span>{{group==='value'?'Token收益分配与供给':'工具集成与管理'}}<span>/</span>{{info.title}}</p>
     <div v-if="group!=='value' || page!=='overview'" class="work-head"><div><h1>{{info.title}}</h1><p>{{info.desc}}</p></div>
 
       <button v-if="page==='evidence'" class="primary-btn" @click="startDeclare"><ico name="plus" :size="16"></ico>申报贡献</button>
@@ -97,7 +96,7 @@
       <section class="panel"><div class="panel-head"><div><h2>服务计量目录</h2><p>按成功用量生成贡献凭据。权益核销产生新增使用记录，已兑换的额度不重复计入收入。</p></div></div>
       <div class="resource-grid"><article v-for="(r,i) in state.resources"><span class="color-line" :class="'s'+i"></span><small>{{O.sides[r.side]}} · {{r.version}}</small><h3>{{r.name}}</h3><p>{{O.actors[r.owner]}}</p><b>{{r.price}} <small>Token / {{O.units[i]}}</small></b><div class="resource-subtotal"><span>本期计入收入</span><strong>{{fmt(meterRevenue[i])}} Token</strong></div></article></div></section>
       <section class="panel"><div class="panel-head"><h2>使用流水</h2><select v-model="meterFilter" aria-label="计量侧筛选"><option value="">全部计量侧</option><option v-for="(s,i) in O.sides" :value="String(i)">{{s}}</option></select></div>
-      <div class="tablewrap"><table><thead><tr><th>业务凭据</th><th>资源及版本</th><th>来源</th><th>有效用量</th><th>计入收入</th><th>归属批次</th><th></th></tr></thead><tbody><tr v-for="u in meterList"><td class="mono">{{u.ref}}<small v-if="u.voucher">权益核销 · {{u.voucher}}</small></td><td>{{u.resourceName||state.resources[u.r].name}}<small>{{u.version}}</small></td><td>{{u.bridgeSource==='tool'?'工具工作台':u.bridgeSource==='vector'?'张量向量库':'人工登记'}}<small v-if="u.bridgeEventId">{{u.bridgeEventId}}</small></td><td>{{fmt(u.qty)}} {{O.units[u.r]}}</td><td class="num">{{fmt(u.amount)}}</td><td>{{u.batch||'本期未结'}}</td><td><button class="text-link" @click="showEvidence(state.events.find(e=>e.id===u.event))">关联凭据</button></td></tr></tbody></table></div></section>
+      <div class="tablewrap"><table><thead><tr><th>业务凭据</th><th>资源及版本</th><th>来源</th><th>有效用量</th><th>计入收入</th><th>归属批次</th><th></th></tr></thead><tbody><tr v-for="u in meterList"><td class="mono">{{u.ref}}<small v-if="u.voucher">权益核销 · {{u.voucher}}</small></td><td>{{u.resourceName||state.resources[u.r].name}}<small>{{u.version}}</small></td><td>{{u.bridgeSource==='tool'?'工具工作台':u.bridgeSource==='vector'?'Token张量向量库':'人工登记'}}<small v-if="u.bridgeEventId">{{u.bridgeEventId}}</small></td><td>{{fmt(u.qty)}} {{O.units[u.r]}}</td><td class="num">{{fmt(u.amount)}}</td><td>{{u.batch||'本期未结'}}</td><td><button class="text-link" @click="showEvidence(state.events.find(e=>e.id===u.event))">关联凭据</button></td></tr></tbody></table></div></section>
     </template>
 
     <template v-else-if="page==='rules'">

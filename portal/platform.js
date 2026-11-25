@@ -100,7 +100,7 @@
     function open(kind,id='',fields={}){err.value='';dialogKind.value=kind;objectId.value=id;form.value=fields;nextTick(()=>{if(!dialog.value.open)dialog.value.showModal();dialog.value.scrollTop=0;});}
     function close(){dialog.value?.close();dialogKind.value='';err.value='';}
     function backdrop(e){if(e.target!==dialog.value)return;const b=e.target.getBoundingClientRect();if(e.clientX<b.left||e.clientX>b.right||e.clientY<b.top||e.clientY>b.bottom)close();}
-    function onRoute(){close();route.value=parse();document.title=(info.value.title|| (group.value==='vector'?'张量向量库':'平台首页'))+' · '+title;window.scrollTo(0,0);}
+    function onRoute(){close();route.value=parse();document.title=(info.value.title|| (group.value==='vector'?'Token张量向量库':'北交大模块'))+' · '+title;window.scrollTo(0,0);}
     function onStore(e){if(e.key===key && e.newValue)try{state.value=JSON.parse(e.newValue);}catch{}if(e.key===window.ScienceBridge?.key)syncUsage();}
     function onIntegrationMessage(e){if(e.origin===location.origin&&e.source===vectorFrame.value?.contentWindow&&e.data?.channel==='bjtu-science-bridge')captureUsage(e.data.event);}
     onMounted(()=>{onRoute();syncUsage();window.addEventListener('hashchange',onRoute);window.addEventListener('storage',onStore);window.addEventListener('message',onIntegrationMessage);});

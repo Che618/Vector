@@ -1,7 +1,7 @@
 const PlatformNav = (() => {
   const modules = [
     {key:'tools',short:'工具集成与管理',name:'科学数据处理工具集成与管理',eng:'TOOL REGISTRY',icon:'tool',tone:'blue',link:'#/tools/catalog',desc:'统一登记、验证和维护多学科科学数据处理工具，并管理可复用的处理流程。',meta:'工具目录 · 接入审核 · 流程运维',action:'进入工具工作台'},
-    {key:'value',short:'积分收益分配与供给',name:'积分收益分配与供给',eng:'POINTS DISTRIBUTION',icon:'income',tone:'blue',link:'#/value/overview',desc:'从实际调用核算收入，按有效贡献分配收益，用留存额度支持下一轮数据供给。',meta:'使用计量 · 分配结算 · 持续供给',action:'进入收益分配与供给'},
+    {key:'value',short:'Token收益分配与供给',name:'Token收益分配与供给',eng:'POINTS DISTRIBUTION',icon:'income',tone:'blue',link:'#/value/overview',desc:'从实际调用核算收入，按有效贡献分配收益，用留存额度支持下一轮数据供给。',meta:'使用计量 · 分配结算 · 持续供给',action:'进入收益分配与供给'},
     {key:'vector',short:'Token张量库',name:'Token张量库',eng:'TENSOR LIBRARY',icon:'layers',tone:'blue',link:'#/vector',desc:'接入科学数据，完成特征编码与索引构建，通过相似检索回溯原始记录。',meta:'数据接入 · 特征编码 · 检索评测',action:'进入张量库'}
   ];
   const value = [

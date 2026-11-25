@@ -35,12 +35,12 @@
 <div v-else-if="group==='vector'" class="vector-host"><div class="local-vector"><a :href="vectorSource" target="_blank" rel="noopener">独立打开张量库</a></div><iframe ref="vectorFrame" title="Token张量库九页工作台" :src="vectorSource"></iframe></div>
 
 <div v-else class="shell">
-  <aside class="sidebar"><div class="side-brand"><span class="side-icon"><ico :name="group==='value'?'income':'tool'" :size="23"></ico></span><div><b>{{group==='value'?'积分收益分配与供给':'工具管理工作台'}}</b><small>{{group==='value'?'POINTS DISTRIBUTION':'TOOL REGISTRY'}}</small></div></div>
+  <aside class="sidebar"><div class="side-brand"><span class="side-icon"><ico :name="group==='value'?'income':'tool'" :size="23"></ico></span><div><b>{{group==='value'?'Token收益分配与供给':'工具管理工作台'}}</b><small>{{group==='value'?'POINTS DISTRIBUTION':'TOOL REGISTRY'}}</small></div></div>
     <nav aria-label="模块内页面"><section v-for="g in navGroups"><div class="nav-group">{{g}}</div><a v-for="n in navigation.filter(i=>i.section===g)" :href="'#/'+group+'/'+n.id" :class="{sel:n.id===page}" :aria-current="n.id===page?'page':undefined"><ico :name="n.icon" :size="18"></ico>{{n.title}}</a></section></nav>
     <div class="side-note"><ico name="flask" :size="17"></ico>北京交通大学 · 演示工作区</div>
   </aside>
   <main class="work">
-    <p class="bread"><a href="#/platform">北交大模块</a><span>/</span>{{group==='value'?'积分收益分配与供给':'工具集成与管理'}}<span>/</span>{{info.title}}</p>
+    <p class="bread"><a href="#/platform">北交大模块</a><span>/</span>{{group==='value'?'Token收益分配与供给':'工具集成与管理'}}<span>/</span>{{info.title}}</p>
     <div v-if="group!=='value' || page!=='overview'" class="work-head"><div><h1>{{info.title}}</h1><p>{{info.desc}}</p></div>
 
       <button v-if="page==='evidence'" class="primary-btn" @click="startDeclare"><ico name="plus" :size="16"></ico>申报贡献</button>
@@ -56,7 +56,7 @@
     <template v-else-if="page==='overview'">
       <div class="period-toolbar"><label>统计范围<select v-model="period"><option value="">本期进行中</option><option v-for="b in state.batches" :value="b.id">{{b.id}} · {{stamp(b.time)}}</option></select></label><button class="soft-btn" @click="open('guide')"><ico name="book" :size="16"></ico>演示指引</button></div>
       <section class="value-hero">
-        <div class="value-intro"><div class="hero-context"><span></span>海洋科学 · 近岸观测服务</div><h1>积分收益分配与供给</h1>
+        <div class="value-intro"><div class="hero-context"><span></span>海洋科学 · 近岸观测服务</div><h1>Token收益分配与供给</h1>
           <p>一批温盐数据被使用后，收益怎样分给参与方，又怎样支持下一轮观测？</p>
           <div class="hero-links"><button class="hero-main" @click="overviewAction">{{overviewLabel}}</button><button @click="showUses(historical?'本批使用流水':'本期使用流水',overviewPool.usages)">查看使用流水</button></div>
         </div>
@@ -135,7 +135,7 @@
   </main>
 </div>
 <dialog ref="dialog" class="modal" @cancel="dialogKind=''" @click="backdrop"><div v-if="dialogKind">
-  <div class="dialog-head"><div><small>{{group==='value'?'积分收益分配与供给':'平台工作台'}}</small><h2>{{dialogTitle}}</h2></div><button class="icon-btn" @click="close" aria-label="关闭弹窗"><ico name="close"></ico></button></div>
+  <div class="dialog-head"><div><small>{{group==='value'?'Token收益分配与供给':'平台工作台'}}</small><h2>{{dialogTitle}}</h2></div><button class="icon-btn" @click="close" aria-label="关闭弹窗"><ico name="close"></ico></button></div>
   <div class="dialog-body">
   <template v-if="dialogKind==='uses'"><h3>{{drill.title}}</h3><div v-for="u in drill.uses" class="line-pair"><span>{{u.ref}} · {{state.resources[u.r].name}} {{u.version}}</span><b>{{u.qty}}{{O.units[u.r]}} × {{u.price}} = {{fmt(u.amount)}}</b></div><empty v-if="!drill.uses.length" text="暂无对应使用记录"></empty></template>
   <template v-if="dialogKind==='guide'"><ol class="guide"><li v-for="g in guide"><a :href="'#/value/'+g[0]" @click="close">{{g[1]}}</a><p>{{g[2]}}</p></li></ol><button class="soft-btn" @click="open('reset')">恢复收益分配与供给演示起点</button></template>

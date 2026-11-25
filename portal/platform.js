@@ -46,14 +46,14 @@
     const evidenceStats=computed(()=>['待核验','已确认','已排除'].map((x,i)=>[x,fmt(state.value.events.filter(e=>e.state===x).length),['audit','tasks','filter'][i],['amber','teal','violet'][i],['需核对凭据 · 条','含历史已结算事件 · 条','保留排除理由 · 条'][i]]));
     const meterStats=computed(()=>state.value.resources.map((r,i)=>[O.sides[i]+'本期用量',fmt(O.total(state.value.uses.filter(u=>!u.batch && u.r===i).map(u=>u.qty))),['database','tool','nodes'][i],['blue','violet','teal'][i],r.name+' · '+O.units[i]]));
     const meterList=computed(()=>state.value.uses.filter(u=>meterFilter.value===''||u.r===Number(meterFilter.value)));
-    const batchStats=computed(()=>[['结算批次',fmt(state.value.batches.length),'book','blue','保留计算快照 · 批'],['累计主体入账',fmt(O.total(state.value.batches.map(b=>b.net))),'income','teal','各参与方分配总额 · Token'],['累计供给留存',fmt(O.total(state.value.batches.map(b=>b.reserve))),'branch','violet','历次结算计提 · Token']]);
-    const supplyStats=computed(()=>[['可立项额度',fmt(available.value),'income','teal','已结算的可用留存 · Token'],['任务已锁定',fmt(O.total(openTasks.value.map(t=>t.budget))),'tasks','blue','待交付或验收 · Token'],['已发放激励',fmt(O.total(state.value.tasks.filter(t=>t.state==='已验收').map(t=>t.budget))),'box','violet','已进入责任主体账户 · Token']]);
+    const batchStats=computed(()=>[['结算批次',fmt(state.value.batches.length),'book','blue','保留计算快照 · 批'],['累计主体入账',fmt(O.total(state.value.batches.map(b=>b.net))),'income','teal','各参与方分配总额 · 积分'],['累计供给留存',fmt(O.total(state.value.batches.map(b=>b.reserve))),'branch','violet','历次结算计提 · 积分']]);
+    const supplyStats=computed(()=>[['可立项额度',fmt(available.value),'income','teal','已结算的可用留存 · 积分'],['任务已锁定',fmt(O.total(openTasks.value.map(t=>t.budget))),'tasks','blue','待交付或验收 · 积分'],['已发放激励',fmt(O.total(state.value.tasks.filter(t=>t.state==='已验收').map(t=>t.budget))),'box','violet','已进入责任主体账户 · 积分']]);
     const taskList=computed(()=>state.value.tasks.filter(t=>!taskFilter.value||t.state===taskFilter.value));
     const myVouchers=computed(()=>state.value.vouchers.filter(v=>v.actor===account.value));
     const logKinds=computed(()=>[...new Set(state.value.log.map(l=>l.action))]);
     const traceList=computed(()=>state.value.log.filter(l=>(!traceKind.value||l.action===traceKind.value)&&[l.id,l.ref,l.action,l.detail].join(' ').toLowerCase().includes(traceQuery.value.toLowerCase())));
     const guide=[
-      ['meter','先核对收入来源','查看三侧流水。演示起点有 940 条取数、58 次工具作业和 29 次智能体调用，合计 4,229 Token。'],
+      ['meter','先核对收入来源','查看三侧流水。演示起点有 940 条取数、58 次工具作业和 29 次智能体调用，合计 4,229 积分。'],
       ['evidence','确认谁参与了贡献','确认 JOB-11-3 的有效回执，再与原始 JOB-11-1 对照，排除重复上报。'],
       ['rules','说明每个主体分得多少','核对三侧权重和综合得分；成本、供给留存计提后，剩余额度按主体得分分配。'],
       ['ledger','核对分配结果','确认入账后打开最新批次的快照，查看收益来源、计算规则和两种后续用途。'],
@@ -82,7 +82,7 @@
     const pathway=computed(()=>[
       {route:'meter',title:'登记使用',icon:'pulse',detail:'按用量和单价归集收入',measure:preview.value.usages.length+' 笔待结流水'},
       {route:'evidence',title:'核验贡献',icon:'audit',detail:'将有效工作归属到主体',measure:pending.value.length+' 条待核验'},
-      {route:'rules',title:'试算分配',icon:'income',detail:'按得分计算主体分成',measure:fmt(preview.value.net)+' Token 待分配'},
+      {route:'rules',title:'试算分配',icon:'income',detail:'按得分计算主体分成',measure:fmt(preview.value.net)+' 积分 待分配'},
       {route:'ledger',title:'确认入账',icon:'book',detail:'固化规则与分配明细',measure:state.value.batches.length+' 个已结批次'}
     ]);
     const meterRevenue=computed(()=>state.value.resources.map((_,i)=>O.total(preview.value.usages.filter(u=>u.r===i).map(u=>u.amount))));
@@ -100,7 +100,7 @@
     function open(kind,id='',fields={}){err.value='';dialogKind.value=kind;objectId.value=id;form.value=fields;nextTick(()=>{if(!dialog.value.open)dialog.value.showModal();dialog.value.scrollTop=0;});}
     function close(){dialog.value?.close();dialogKind.value='';err.value='';}
     function backdrop(e){if(e.target!==dialog.value)return;const b=e.target.getBoundingClientRect();if(e.clientX<b.left||e.clientX>b.right||e.clientY<b.top||e.clientY>b.bottom)close();}
-    function onRoute(){close();route.value=parse();document.title=(info.value.title|| (group.value==='vector'?'Token张量向量库':'北交大模块'))+' · '+title;window.scrollTo(0,0);}
+    function onRoute(){close();route.value=parse();document.title=(info.value.title|| (group.value==='vector'?'Token张量库':'北交大模块'))+' · '+title;window.scrollTo(0,0);}
     function onStore(e){if(e.key===key && e.newValue)try{state.value=JSON.parse(e.newValue);}catch{}if(e.key===window.ScienceBridge?.key)syncUsage();}
     function onIntegrationMessage(e){if(e.origin===location.origin&&e.source===vectorFrame.value?.contentWindow&&e.data?.channel==='bjtu-science-bridge')captureUsage(e.data.event);}
     onMounted(()=>{onRoute();syncUsage();window.addEventListener('hashchange',onRoute);window.addEventListener('storage',onStore);window.addEventListener('message',onIntegrationMessage);});

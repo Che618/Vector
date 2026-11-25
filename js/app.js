@@ -18,7 +18,7 @@ const app=createApp({setup(){
  const indexed=computed(()=>s.sources.filter(d=>d.state==='已索引').sort((a,b)=>(b.indexedAt||b.created)-(a.indexedAt||a.created)));
  const filtered=computed(()=>indexed.value.filter(d=>(!domain.value||d.domain===domain.value)&&(!kind.value||kind.value===d.mode)&&(d.name+' '+d.id).toLowerCase().includes(q.value.trim().toLowerCase())));
  const info=computed(()=>guides.find(g=>g[0]===page.value)||guides[0]);
- const steps=computed(()=>[{page:'intake',ic:'database',tone:'blue',title:'数据接入',desc:'导入文本、结构化记录或数值张量',stat:s.sources.length+' 个已接入数据源'},{page:'encode',ic:'layers',tone:'violet',title:'向量生成',desc:'编码数据片段，预览并写入向量',stat:s.sources.reduce((n,d)=>n+(d.state!=='待编码'?d.records.length:0),0)+' 条已生成向量'},{page:'search',ic:'nodes',tone:'teal',title:'相似检索',desc:'按相似度召回片段，回溯来源',stat:indexed.value.length+' 个可检索索引'}]);
+ const steps=computed(()=>[{page:'intake',ic:'database',tone:'blue',title:'数据接入',desc:'导入文本、结构化记录或数值张量',stat:s.sources.length+' 个已接入数据源'},{page:'encode',ic:'layers',tone:'violet',title:'特征编码',desc:'编码数据片段，预览并写入向量',stat:s.sources.reduce((n,d)=>n+(d.state!=='待编码'?d.records.length:0),0)+' 条已编码记录'},{page:'search',ic:'nodes',tone:'teal',title:'相似检索',desc:'按相似度召回片段，回溯来源',stat:indexed.value.length+' 个可检索索引'}]);
  const points=computed(()=>{let a=indexed.value.filter(d=>d.mode==='text').flatMap(d=>d.records.map((r,i)=>({ds:d.id,i,xy:Model.project(r.vec),label:d.name+' · '+r.loc,color:domains[d.domain].color})));const maxX=Math.max(.2,...a.map(p=>Math.abs(p.xy[0]))),maxY=Math.max(.2,...a.map(p=>Math.abs(p.xy[1])));return a.map(p=>({...p,x:145+p.xy[0]/maxX*119,y:95-p.xy[1]/maxY*72}))});
  const plotDomains=computed(()=>[...new Set(indexed.value.filter(d=>d.mode==='text').map(d=>d.domain))]);
  const referenceBenchmark=computed(()=>{
@@ -44,7 +44,7 @@ const app=createApp({setup(){
  function open(name){modal.value=name;nextTick(()=>{if(dialogEl.value&&!dialogEl.value.open)dialogEl.value.showModal();const body=dialogEl.value?.querySelector('.dlg-body');if(body)body.scrollTop=0})}
  function closeDialog(){if(dialogEl.value?.open)dialogEl.value.close();modal.value=''}
  function go(p){if(page.value!==p){location.hash='/'+p;applyRoute()}else{closeDialog();mobile.value=false}}
- function applyRoute(){let path=location.hash.replace(/^#\/?/,'').split('?')[0];let p=guides.some(g=>g[0]===path)?path:'home';if(page.value!==p){closeDialog();err.value='';page.value=p;window.scrollTo(0,0)}mobile.value=false;document.title=info.value[1]+' · Token张量向量库'}
+ function applyRoute(){let path=location.hash.replace(/^#\/?/,'').split('?')[0];let p=guides.some(g=>g[0]===path)?path:'home';if(page.value!==p){closeDialog();err.value='';page.value=p;window.scrollTo(0,0)}mobile.value=false;document.title=info.value[1]+' · Token张量库'}
  function themeSwitch(){theme.value=WorkspaceTheme.applyTheme(theme.value==='classic'?'smart':'classic');say('已切换至'+(theme.value==='classic'?'传统':'智能')+'主题')}
  function changeMode(){draft.format=draft.mode==='numeric'?'json':'txt';draft.input='';draft.file='';err.value=''}
  function loadExample(){if(draft.mode==='numeric'){draft.name='海温剖面张量示例';draft.input=Model.numericText;draft.format='json'}else{draft.name='多学科观测笔记';draft.input=Model.demoText;draft.format='txt'}draft.file='';draft.domain=draft.mode==='text'?'其他领域':'海洋科学';err.value='';say('已加载示例，可修改后登记')}

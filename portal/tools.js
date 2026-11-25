@@ -116,16 +116,16 @@
           const linked=this.data.tools.find(t=>t.name===submission.name&&t.version===submission.version);
           if(linked)linked.status=linked.status==='待验证'?'待审核':'已发布';
         }
-        this.notify(pass?'社区审核已通过，工具仍需完成接入验证后发布。':'已退回提交，并保留审核状态与记录。');
+        this.notify(pass?'共建工具审核已通过，工具仍需完成接入验证后发布。':'已退回提交，并保留审核状态与记录。');
       },
       pillClass(status) { return ['已发布','已通过','成功'].includes(status)?'ok':['待审核','待验证','待补充','失败'].includes(status)?'wait':['已停用','草稿'].includes(status)?'workpill':''; }
     },
     template: `
       <div class="tools-workspace">
-        <section class="panel"><div class="panel-head"><div><h2>处理、入库与使用联动</h2><p>成功试运行生成演示报告和待核验用量。报告可在Token张量向量库的数据接入页接收，编码入库后的检索命中也会回到收益计量。</p></div><label>试运行场景<select v-model="runCase"><option>正常样例</option><option>失败样例</option></select></label></div><div class="actions"><a class="soft-btn" href="#/vector/intake">向量库接收产物</a><a class="soft-btn" href="#/value/meter">查看使用计量</a></div></section>
+        <section class="panel"><div class="panel-head"><div><h2>处理、入库与使用联动</h2><p>成功试运行生成演示报告和待核验用量。报告可在Token张量库的数据接入页接收，编码入库后的检索命中也会回到收益计量。</p></div><label>试运行场景<select v-model="runCase"><option>正常样例</option><option>失败样例</option></select></label></div><div class="actions"><a class="soft-btn" href="#/vector/intake">张量库接收产物</a><a class="soft-btn" href="#/value/meter">查看使用计量</a></div></section>
         <section class="metrics three tools-metrics">
           <article class="metric"><div><span>已发布工具</span><i class="mini-tile teal">{{readyCount}}</i></div><small>仅发布版本可进入流程</small></article>
-          <article class="metric"><div><span>接入与审核待办</span><i class="mini-tile amber">{{pendingCount}}</i></div><small>验证、审核和社区提交</small></article>
+          <article class="metric"><div><span>接入与审核待办</span><i class="mini-tile amber">{{pendingCount}}</i></div><small>验证、审核和共建工具提交</small></article>
           <article class="metric"><div><span>最近试运行</span><i class="mini-tile blue">{{latestRun ? latestRun.status : '暂无'}}</i></div><small>{{latestRun ? latestRun.id+' · '+latestRun.time : '运行后生成记录'}}</small></article>
         </section>
 
@@ -170,7 +170,7 @@
         </template>
 
         <template v-else-if="page==='community'">
-          <section class="panel"><div class="panel-head"><div><h2>社区提交审核</h2><p>核对提交主体、版本差异、许可证、依赖和样例验证，再决定是否发布。</p></div><select v-model="submissionFilter"><option>全部状态</option><option>待审核</option><option>已通过</option><option>待补充</option></select></div><div class="tablewrap"><table><thead><tr><th>提交编号</th><th>工具与版本</th><th>领域</th><th>提交主体</th><th>变更说明</th><th>许可证</th><th>状态 / 审核</th></tr></thead><tbody><tr v-for="s in filteredSubmissions" :key="s.id"><td class="mono">{{s.id}}<small>{{s.date}}</small></td><td>{{s.name}}<small>v{{s.version}}</small></td><td>{{s.domain}}</td><td>{{s.contributor}}</td><td>{{s.change}}</td><td>{{s.license}}</td><td><span class="pill" :class="pillClass(s.status)">{{s.status}}</span><div v-if="s.status==='待审核'" class="review-actions"><button class="text-link" @click="reviewSubmission(s,true)">通过并发布</button><button class="text-link" @click="reviewSubmission(s,false)">退回补充</button></div></td></tr><tr v-if="!filteredSubmissions.length"><td colspan="7"><empty text="暂无社区提交"></empty></td></tr></tbody></table></div></section>
+          <section class="panel"><div class="panel-head"><div><h2>共建工具提交审核</h2><p>核对提交主体、版本差异、许可证、依赖和样例验证，再决定是否发布。</p></div><select v-model="submissionFilter"><option>全部状态</option><option>待审核</option><option>已通过</option><option>待补充</option></select></div><div class="tablewrap"><table><thead><tr><th>提交编号</th><th>工具与版本</th><th>领域</th><th>提交主体</th><th>变更说明</th><th>许可证</th><th>状态 / 审核</th></tr></thead><tbody><tr v-for="s in filteredSubmissions" :key="s.id"><td class="mono">{{s.id}}<small>{{s.date}}</small></td><td>{{s.name}}<small>v{{s.version}}</small></td><td>{{s.domain}}</td><td>{{s.contributor}}</td><td>{{s.change}}</td><td>{{s.license}}</td><td><span class="pill" :class="pillClass(s.status)">{{s.status}}</span><div v-if="s.status==='待审核'" class="review-actions"><button class="text-link" @click="reviewSubmission(s,true)">通过并发布</button><button class="text-link" @click="reviewSubmission(s,false)">退回补充</button></div></td></tr><tr v-if="!filteredSubmissions.length"><td colspan="7"><empty text="暂无共建工具提交"></empty></td></tr></tbody></table></div></section>
           <section class="panel"><h2>发布核对项</h2><div class="checklist"><span>责任主体和版本明确</span><span>许可证与使用范围已核对</span><span>输入输出及运行依赖可复现</span><span>正常、边界和失败样例齐全</span><span>未包含凭据、个人配置或全量数据</span></div></section>
         </template>
 
